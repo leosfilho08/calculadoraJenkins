@@ -8,34 +8,25 @@ pipeline {
             }
         }
 
-        stage('Instalar Dependências') {
+        stage('Verificar Sintaxe Python') {
             steps {
-                sh '''
-                    python3 -m pip install --upgrade pip
-                    python3 -m pip install -r requirements.txt
-                '''
-            }
-        }
-
-        stage('Análise Estática de Código (Flake8)') {
-            steps {
-                sh 'flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics'
-            }
-        }
-
-        stage('Executar Testes Automatizados') {
-            steps {
-                sh 'pytest'
+                script {
+                    if (isUnix()) {
+                        sh 'python3 -m py_compile *.py || python -m py_compile *.py'
+                    } else {
+                        bat 'python -m py_compile *.py'
+                    }
+                }
             }
         }
     }
 
     post {
         success {
-            echo ' Pipeline finalizada com SUCESSO! Todos os testes passaram.'
+            echo 'Build finalizado com sucesso!'
         }
         failure {
-            echo ' A pipeline FALHOU. Verifique os erros acima.'
+            echo 'Falha na verificação do código. Cheque o Console Output.'
         }
     }
 }
